@@ -1,5 +1,5 @@
 {
-    "name" : "m00nk/yii2-feedbackForm",
+    "name" : "m00nk/yii2-feedback-form",
     "description" : "Feedback Form widget",
     "type": "yii2-extension",
     "license": "MIT",
