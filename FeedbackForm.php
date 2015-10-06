@@ -102,15 +102,16 @@ class FeedbackForm extends Widget
 		if($this->messageTemplate === false)
 			$this->messageTemplate = '
 <h2>Здравствуйте.</h2>
-<p>Новое сообщение было отправлено со страницы <a href="'.Url::to([''], true).'">'.Url::to([''], true).'</a>.</p>
+<p>Новое сообщение было отправлено со страницы <a href="'.Url::to(array_merge([''], $_GET), true).'">'.Url::to(array_merge([''], $_GET), true).'</a>.</p>
 {text}
 <p><br/>---<br/>Sent by Feedback robot at '.date('d.m.Y H:i:s').'</p>';
 
 		$oldTime = Yii::$app->session->get($this->sessionVarName, 0);
 		if(time() - $oldTime > $this->blockDelay)
 		{
-			$model = new FeedbackModel();
-			$model->_inputs = $this->inputs;
+			$model = new FeedbackModel([
+				'_inputs' => $this->inputs
+			]);
 
 			if($model->load(Yii::$app->request->post()))
 			{
