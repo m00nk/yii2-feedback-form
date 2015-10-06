@@ -1,0 +1,25 @@
+{
+    "name" : "m00nk/yii2-feedbackForm",
+    "description" : "Feedback Form widget",
+    "type": "yii2-extension",
+    "license": "MIT",
+    "version" : "1.0.0",
+    "authors": [
+        {
+            "name": "Dmitrij Sheremetjev",
+            "email": "m00nk1975@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=5.4.0",
+        "yiisoft/yii2": "*@dev",
+        "yiisoft/yii2-bootstrap": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "m00nk\\feedbackForm\\": ""
+        }
+    }
+
+}
