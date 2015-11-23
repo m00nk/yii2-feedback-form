@@ -70,6 +70,9 @@ class FeedbackForm extends Widget
 	 */
 	public $inputs = array();
 
+	/** @var bool|string имя поля для JS-капчи или FALSE если не нужно  */
+	public $jsCaptchaName = false;
+
 	/** @var string надпись на кнопке отправки */
 	public $sendButtonLabel = 'Отправить';
 
@@ -110,7 +113,8 @@ class FeedbackForm extends Widget
 		if(time() - $oldTime > $this->blockDelay)
 		{
 			$model = new FeedbackModel([
-				'_inputs' => $this->inputs
+				'_inputs' => $this->inputs,
+				'jsCaptchaName' => $this->jsCaptchaName
 			]);
 
 			if($model->load(Yii::$app->request->post()))
@@ -131,6 +135,7 @@ class FeedbackForm extends Widget
 				}
 			}
 
+			$model->resetCaptcha();
 			echo $this->render('form', ['model' => $model]);
 		}
 		else

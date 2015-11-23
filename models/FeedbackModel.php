@@ -11,12 +11,17 @@ namespace m00nk\feedbackForm\models;
 
 use yii\base\Model;
 use yii\helpers\Html;
+use Yii;
 
 class FeedbackModel extends Model
 {
 	const TYPE_INPUT = 'input';
 	const TYPE_TEXT = 'text';
 	const TYPE_DROPDOWN = 'dropdown';
+	const TYPE_CAPTCHA = 'captcha';
+	const TYPE_CAPTCHA_CODE = 'captcha code';
+
+	public $jsCaptchaName = false; // имя поля или FALSE если не нужно
 
 	public $_inputs = array(
 //-----------------------------------------
@@ -51,7 +56,7 @@ class FeedbackModel extends Model
 //		array(
 //			'label' => 'Комментарий',
 //			'field' => 'comment',
-//			'type' => FeedbackForm::TYPE_TEXT,
+//			'type' => self::TYPE_TEXT,
 //			'rules' => array(
 //				array('required'),
 //			),
@@ -62,12 +67,37 @@ class FeedbackModel extends Model
 	//-----------------------------------------
 	private $_attrs = array();
 
+	private $_captchaCode = 0;
+	private $_captchaExpression = '';
+
 	public function init()
 	{
 		parent::init();
 
+		$this->_captchaCode = rand(100000, 999999);
+
+		if($this->jsCaptchaName !== false)
+		{
+			$this->_inputs[] = [
+				'label' => '',
+				'field' => $this->jsCaptchaName,
+				'type' => self::TYPE_CAPTCHA,
+			];
+
+			$this->_inputs[] = [
+				'label' => '',
+				'field' => $this->jsCaptchaName.'1',
+				'type' => self::TYPE_CAPTCHA_CODE,
+			];
+		}
+
 		foreach($this->_inputs as $inp)
-			$this->{$inp['field']} = '';
+		{
+			if($inp['type'] == self::TYPE_CAPTCHA_CODE)
+				$this->{$inp['field']} = $this->_getCodeByValue(eval('return '.$this->getExpression().';'));
+			else
+				$this->{$inp['field']} = '';
+		}
 	}
 
 	public function rules()
@@ -84,6 +114,24 @@ class FeedbackModel extends Model
 			if($inp['type'] == self::TYPE_DROPDOWN)
 				$out[] = array_merge(array($inp['field']), array('in', 'range' => array_keys($inp['values'])));
 		}
+
+		if($this->jsCaptchaName !== false)
+		{
+			$out[] = [$this->jsCaptchaName.'1', 'safe'];
+
+			$out[] = [
+				$this->jsCaptchaName,
+				function(){
+					$oldVal = $this->{$this->jsCaptchaName.'1'};
+					$newVal = $this->{$this->jsCaptchaName};
+					$code = $this->_getCodeByValue($newVal);
+
+					if($oldVal != $code)
+						$this->addError($this->_inputs[0]['field'], 'You can not use this form because we are not sure you are human.');
+				}
+			];
+		}
+
 		return $out;
 	}
 
@@ -122,9 +170,11 @@ class FeedbackModel extends Model
 		for ($i = 0, $_c = count($this->_inputs); $i < $_c; $i++)
 		{
 			$inp = $this->_inputs[$i];
-			$var = $inp['field'];
 
-			$value = $this->$var;
+			if($inp['type'] == self::TYPE_CAPTCHA || $inp['type'] == self::TYPE_CAPTCHA_CODE)
+				continue;
+
+			$value = $this->{$inp['field']};
 
 			if($inp['type'] == self::TYPE_DROPDOWN)
 				$value = $inp['values'][$value];
@@ -146,4 +196,29 @@ class FeedbackModel extends Model
 			->send();
 	}
 
+	private function _getCodeByValue($val)
+	{
+		$_ = substr(md5(Yii::$app->params['magicWord'].$val), 10, 18);
+		return $_;
+	}
+
+	public function getExpression()
+	{
+		if(empty($this->_captchaExpression))
+		{
+			$a = rand(10000, 99999);
+			$b = rand(10000, 99999);
+			$this->_captchaExpression = $this->_captchaCode.' + '.$a.' - '.$b;
+		}
+
+		return $this->_captchaExpression;
+	}
+
+	public function resetCaptcha()
+	{
+		$this->_captchaExpression = '';
+
+		$this->{$this->jsCaptchaName} = '';
+		$this->{$this->jsCaptchaName.'1'} = $this->_getCodeByValue(eval('return '.$this->getExpression().';'));
+	}
 }

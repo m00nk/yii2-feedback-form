@@ -21,6 +21,10 @@ use m00nk\feedbackForm\FeedbackForm;
 
 $widget = $this->context;
 
+if($widget->jsCaptchaName !== false)
+	\yii\web\JqueryAsset::register($this);
+
+
 $form = ActiveForm::begin([
 	'enableClientValidation' => false,
 	'enableAjaxValidation' => false,
@@ -35,6 +39,15 @@ foreach($model->_inputs as $inp)
 {
 	switch ($inp['type'])
 	{
+		case FeedbackModel::TYPE_CAPTCHA_CODE:
+			echo Html::activeHiddenInput($model, $inp['field']);
+			break;
+
+		case FeedbackModel::TYPE_CAPTCHA:
+			echo Html::activeHiddenInput($model, $inp['field']);
+			$this->registerJs('$("#'.Html::getInputId($model, $inp['field']).'").val('.$model->getExpression().');');
+			break;
+
 		case FeedbackModel::TYPE_INPUT:
 			echo $form->field($model, $inp['field'], ['inputOptions' => isset($inp['htmlOptions']) ? $inp['htmlOptions'] : []]);
 			break;
