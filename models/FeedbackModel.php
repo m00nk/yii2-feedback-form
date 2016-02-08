@@ -23,49 +23,49 @@ class FeedbackModel extends Model
 
 	public $jsCaptchaName = false; // имя поля или FALSE если не нужно
 
-	public $_inputs = array(
+	public $_inputs = [];
 //-----------------------------------------
 // ПРИМЕР ИСПОЛЬЗОВАНИЯ (ФОРМАТ)
 //-----------------------------------------
-//		array(
+//		[
 //			'label' => 'Мыло',
 //			'field' => 'email',
 //			'type' => self::TYPE_INPUT,
-//			'rules' => array(
-//				array('required'),
-//				array('email'),
-//				array('length', 'max' => 20)
-//			),
-//			'htmlOptions' => array(),
-//		),
+//          'hint' => 'this is the hint',
+//			'rules' => [
+//				['required'],
+//				['email'],
+//				['length', 'max' => 20]
+//			],
+//			'htmlOptions' => [],
+//		],
 //
-//		array(
+//		[
 //			'label' => 'Ваш пол',
 //			'field' => 'sex',
 //			'type' => self::TYPE_DROPDOWN,
-//			'values' => array(
+//			'values' => [
 //				'male' => 'Мужской',
 //				'female' => 'Женский',
-//			),
-//			'rules' => array(
+//			],
+//			'rules' => [
 //	            // правило 'IN' для списков подставляется автоматически
-//				array('required')
-//			),
-//		),
+//				['required']
+//			],
+//		],
 //
 //		array(
 //			'label' => 'Комментарий',
 //			'field' => 'comment',
 //			'type' => self::TYPE_TEXT,
-//			'rules' => array(
-//				array('required'),
-//			),
-//			'htmlOptions' => array('class' => 'span6', 'style' => 'height: 100px; resize: none;'),
-//		),
-	);
+//			'rules' => [
+//				['required'],
+//			],
+//			'htmlOptions' => ['class' => 'span6', 'style' => 'height: 100px; resize: none;'],
+//		],
 
 	//-----------------------------------------
-	private $_attrs = array();
+	private $_attrs = [];
 
 	private $_captchaCode = 0;
 	private $_captchaExpression = '';
@@ -102,7 +102,7 @@ class FeedbackModel extends Model
 
 	public function rules()
 	{
-		$out = array();
+		$out = [];
 		foreach ($this->_inputs as $inp)
 		{
 			for ($j = 0, $_cc = count($inp['rules']); $j < $_cc; $j++)
@@ -137,7 +137,7 @@ class FeedbackModel extends Model
 
 	public function attributeLabels()
 	{
-		$out = array();
+		$out = [];
 		foreach ($this->_inputs as $inp)
 			$out[$inp['field']] = $inp['label'];
 

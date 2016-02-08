@@ -29,46 +29,47 @@ class FeedbackForm extends Widget
 
 	/** @var array формат данных:
 	 * <pre>
-	 * array(
-	 *   array(
+	 * [
+	 *   [
 	 *     'label' => 'Мыло',
 	 *     'field' => 'email',
-	 *     'type' => 'input', // FeedbackForm::TYPE_INPUT
-	 *     'rules' => array(
-	 *         array('required'),
-	 *         array('email'),
-	 *         array('length', 'max' => 20)
-	 *      ),
-	 *      'htmlOptions' => array(),
-	 *   ),
+	 *     'type' => FeedbackForm::TYPE_INPUT,
+	 *     'hint' => 'This is hint',
+	 *     'rules' => [
+	 *         ['required', 'message' => 'You have to fill this field'],
+	 *         ['email'],
+	 *         ['length', 'max' => 20]
+	 *      ],
+	 *      'htmlOptions' => [],
+	 *   ],
 	 *
-	 *   array(
+	 *   [
 	 *      'label' => 'Ваш пол',
 	 *      'field' => 'sex',
-	 *      'type' => 'dropdown', // FeedbackForm::TYPE_DROPDOWN
-	 *      'values' => array(
-	 *          'male' => 'Мужской',
+	 *      'type' => FeedbackForm::TYPE_DROPDOWN
+	 *      'values' => [
+	 *          'male' => 'Мужской', // ключи можно не задавать
 	 *          'female' => 'Женский',
-	 *      ),
-	 *      'rules' => array(
+	 *      ],
+	 *      'rules' => [
 	 *          // правило 'IN' для списков подставляется автоматически
-	 *          array('required')
-	 *      ),
-	 *  ),
+	 *          ['required']
+	 *      ],
+	 *  ],
 	 *
-	 *  array(
+	 *  [
 	 *      'label' => 'Комментарий',
 	 *      'field' => 'comment',
-	 *      'type' => 'text', // FeedbackForm::TYPE_TEXT
-	 *      'rules' => array(
-	 *          array('required'),
-	 *      ),
-	 *      'htmlOptions' => array('class' => 'span6', 'style' => 'height: 100px; resize: none;'),
-	 *  ),
-	 * )
+	 *      'type' => FeedbackForm::TYPE_TEXT
+	 *      'rules' => [
+	 *          ['required'],
+	 *      ],
+	 *      'htmlOptions' => ['class' => 'span6', 'style' => 'height: 100px; resize: none;'],
+	 *   ],
+	 * ]
 	 * </pre>
 	 */
-	public $inputs = array();
+	public $inputs = [];
 
 	/** @var bool|string имя поля для JS-капчи или FALSE если не нужно  */
 	public $jsCaptchaName = false;
@@ -89,10 +90,16 @@ class FeedbackForm extends Widget
 	public $blockMessage = 'Вы сможете отправить следующее сообщение не ранее чем через 5 минут.';
 
 	/** @var array атрибуты формы */
-	public $htmlOptions = array();
+	public $htmlOptions = [];
 
-	/** @var string тип формы ('vertical', 'inline', 'horizontal', 'search') */
+	/** @var string тип формы ('default', 'inline', 'horizontal') http://www.yiiframework.com/doc-2.0/yii-bootstrap-activeform.html */
 	public $formLayout = 'horizontal';
+
+	/** @var array конфигурация полей формы http://www.yiiframework.com/doc-2.0/yii-bootstrap-activeform.html */
+	public $fieldConfig = [];
+
+	/** @var string классы, которые будут прописаны у DIV'а с кнопкой отправки формы */
+	public $submitDivClasses = 'col-sm-6 col-sm-offset-3';
 
 	/** @var bool|string шаблон сообщения. */
 	public $messageTemplate = false;

@@ -30,7 +30,9 @@ $form = ActiveForm::begin([
 	'enableAjaxValidation' => false,
 
 	'layout' => $widget->formLayout,
-	'options' => $widget->htmlOptions
+	'fieldConfig' => $widget->fieldConfig,
+
+	'options' => $widget->htmlOptions,
 ]);
 
 if($widget->legend !== false) echo Html::tag('legend', array(), $widget->legend);
@@ -49,22 +51,25 @@ foreach($model->_inputs as $inp)
 			break;
 
 		case FeedbackModel::TYPE_INPUT:
-			echo $form->field($model, $inp['field'], ['inputOptions' => isset($inp['htmlOptions']) ? $inp['htmlOptions'] : []]);
+			echo $form->field($model, $inp['field'], ['inputOptions' => isset($inp['htmlOptions']) ? $inp['htmlOptions'] : []])
+			->hint(!empty($inp['hint']) ? $inp['hint'] : '');
 			break;
 
 		case FeedbackModel::TYPE_TEXT:
-			echo $form->field($model, $inp['field'], ['inputOptions' => isset($inp['htmlOptions']) ? $inp['htmlOptions'] : []])->textarea();
+			echo $form->field($model, $inp['field'], ['inputOptions' => isset($inp['htmlOptions']) ? $inp['htmlOptions'] : []])->textarea()
+				->hint(!empty($inp['hint']) ? $inp['hint'] : '');
 			break;
 
 		case FeedbackModel::TYPE_DROPDOWN:
-			echo $form->field($model, $inp['field'], ['inputOptions' => isset($inp['htmlOptions']) ? $inp['htmlOptions'] : []])->dropDownList($inp['values']);
+			echo $form->field($model, $inp['field'], ['inputOptions' => isset($inp['htmlOptions']) ? $inp['htmlOptions'] : []])->dropDownList($inp['values'])
+				->hint(!empty($inp['hint']) ? $inp['hint'] : '');
 			break;
 	}
 }
 
 ?>
 	<div class="form-group">
-		<div class="col-sm-6 col-sm-offset-3">
+		<div class="<?= $widget->submitDivClasses; ?>">
 			<?= Html::submitButton($widget->sendButtonLabel, ['class' => 'btn btn-primary']); ?>
 		</div>
 		<div class="clearfix"></div>
