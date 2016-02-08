@@ -38,7 +38,7 @@ class FeedbackForm extends Widget
 	 *     'rules' => [
 	 *         ['required', 'message' => 'You have to fill this field'],
 	 *         ['email'],
-	 *         ['length', 'max' => 20]
+	 *         ['string', 'max' => 20]
 	 *      ],
 	 *      'htmlOptions' => [],
 	 *   ],

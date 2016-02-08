@@ -35,7 +35,7 @@ class FeedbackModel extends Model
 //			'rules' => [
 //				['required'],
 //				['email'],
-//				['length', 'max' => 20]
+//				['string', 'max' => 20]
 //			],
 //			'htmlOptions' => [],
 //		],
