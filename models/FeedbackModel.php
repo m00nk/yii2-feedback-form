@@ -11,7 +11,6 @@ namespace m00nk\feedbackForm\models;
 
 use yii\base\Model;
 use yii\helpers\Html;
-use Yii;
 
 class FeedbackModel extends Model
 {
@@ -20,6 +19,8 @@ class FeedbackModel extends Model
 	const TYPE_DROPDOWN = 'dropdown';
 	const TYPE_CAPTCHA = 'captcha';
 	const TYPE_CAPTCHA_CODE = 'captcha code';
+
+	public $magicWord = '';
 
 	public $jsCaptchaName = false; // имя поля или FALSE если не нужно
 
@@ -103,16 +104,16 @@ class FeedbackModel extends Model
 	public function rules()
 	{
 		$out = [];
-		foreach ($this->_inputs as $inp)
+		foreach($this->_inputs as $inp)
 		{
-			for ($j = 0, $_cc = count($inp['rules']); $j < $_cc; $j++)
+			for($j = 0, $_cc = count($inp['rules']); $j < $_cc; $j++)
 			{
 				$rule = $inp['rules'][$j];
-				$out[] = array_merge(array($inp['field']), $rule);
+				$out[] = array_merge([$inp['field']], $rule);
 			}
 
 			if($inp['type'] == self::TYPE_DROPDOWN)
-				$out[] = array_merge(array($inp['field']), array('in', 'range' => array_keys($inp['values'])));
+				$out[] = array_merge([$inp['field']], ['in', 'range' => array_keys($inp['values'])]);
 		}
 
 		if($this->jsCaptchaName !== false)
@@ -121,14 +122,14 @@ class FeedbackModel extends Model
 
 			$out[] = [
 				$this->jsCaptchaName,
-				function(){
+				function (){
 					$oldVal = $this->{$this->jsCaptchaName.'1'};
 					$newVal = $this->{$this->jsCaptchaName};
 					$code = $this->_getCodeByValue($newVal);
 
 					if($oldVal != $code)
 						$this->addError($this->_inputs[0]['field'], 'You can not use this form because we are not sure you are human.');
-				}
+				},
 			];
 		}
 
@@ -138,7 +139,7 @@ class FeedbackModel extends Model
 	public function attributeLabels()
 	{
 		$out = [];
-		foreach ($this->_inputs as $inp)
+		foreach($this->_inputs as $inp)
 			$out[$inp['field']] = $inp['label'];
 
 		return $out;
@@ -155,19 +156,10 @@ class FeedbackModel extends Model
 		throw new \Exception("Variable '$var' is absent");
 	}
 
-
-//	public function fillAttributes($attrs)
-//	{
-//		$this->_fillAttrs();
-//
-//		foreach ($attrs as $k => $v)
-//			$this->$k = $v;
-//	}
-
 	public function send($subject, $to, $from, $template)
 	{
 		$msg = '';
-		for ($i = 0, $_c = count($this->_inputs); $i < $_c; $i++)
+		for($i = 0, $_c = count($this->_inputs); $i < $_c; $i++)
 		{
 			$inp = $this->_inputs[$i];
 
@@ -198,7 +190,8 @@ class FeedbackModel extends Model
 
 	private function _getCodeByValue($val)
 	{
-		$_ = substr(md5(Yii::$app->params['magicWord'].$val), 10, 18);
+		$_ = substr(md5($this->magicWord.'-=-=-=-'.$val), 10, 18);
+
 		return $_;
 	}
 

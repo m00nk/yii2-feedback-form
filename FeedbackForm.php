@@ -18,6 +18,9 @@ class FeedbackForm extends Widget
 {
 	public $toEmails = [];
 
+	/** @var string кодовое слово для генерации уникальных значений */
+	public $magicWord = '';
+
 	/** @var string мыло отправителя (робота). Используется только если параметр fieldSenderEmail == false */
 	public $senderEmail = '';
 
@@ -121,7 +124,8 @@ class FeedbackForm extends Widget
 		{
 			$model = new FeedbackModel([
 				'_inputs' => $this->inputs,
-				'jsCaptchaName' => $this->jsCaptchaName
+				'jsCaptchaName' => $this->jsCaptchaName,
+				'magicWord' => $this->magicWord,
 			]);
 
 			if($model->load(Yii::$app->request->post()))
