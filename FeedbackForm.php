@@ -110,6 +110,12 @@ class FeedbackForm extends Widget
 	/** @var bool|string текст заголовка формы или false если заголовок не нужен */
 	public $legend = false;
 
+	/** @var bool включить валидацию на стороне клиента */
+	public $enableClientValidation = false;
+
+	/** @var bool включить валидацию через AJAX */
+	public $enableAjaxValidation = false;
+
 	public function run()
 	{
 		if($this->messageTemplate === false)

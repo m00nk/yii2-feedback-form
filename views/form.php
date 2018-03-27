@@ -26,8 +26,9 @@ if($widget->jsCaptchaName !== false)
 
 
 $form = ActiveForm::begin([
-	'enableClientValidation' => false,
-	'enableAjaxValidation' => false,
+	'action' => false,
+	'enableClientValidation' => $widget->enableClientValidation,
+	'enableAjaxValidation' => $widget->enableAjaxValidation,
 
 	'layout' => $widget->formLayout,
 	'fieldConfig' => $widget->fieldConfig,
