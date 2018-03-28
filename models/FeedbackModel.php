@@ -180,7 +180,7 @@ class FeedbackModel extends Model
 
 		$msg = str_replace('{text}', $msg, $template);
 
-		\Yii::$app->mailer->compose()
+		return \Yii::$app->mailer->compose()
 			->setFrom($from)
 			->setTo($to)
 			->setSubject($subject)
