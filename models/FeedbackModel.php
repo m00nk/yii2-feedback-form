@@ -172,8 +172,8 @@ class FeedbackModel extends Model
 				$value = $inp['values'][$value];
 
 			$msg[] = Html::tag('dl',
-				Html::tag('dt', $inp['label']).
-				Html::tag('dd', $value)
+				Html::tag('dt', Html::encode($inp['label'])).
+				Html::tag('dd', Html::encode($value))
 			);
 		}
 		$msg = implode('', $msg);

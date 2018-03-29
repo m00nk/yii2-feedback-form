@@ -12,6 +12,7 @@ namespace m00nk\feedbackForm;
 use m00nk\feedbackForm\models\FeedbackModel;
 use yii\base\Widget;
 use Yii;
+use yii\helpers\Html;
 use yii\helpers\Url;
 
 class FeedbackForm extends Widget
@@ -122,6 +123,7 @@ class FeedbackForm extends Widget
 			$this->messageTemplate = '
 <h2>Здравствуйте.</h2>
 <p>Новое сообщение было отправлено со страницы <a href="'.Url::to(array_merge([''], $_GET), true).'">'.Url::to(array_merge([''], $_GET), true).'</a>.</p>
+<p>Тема: <b>'.Html::encode($this->subject).'</b></p>
 {text}
 <p><br/>---<br/>Sent by Feedback robot at '.date('d.m.Y H:i:s').'</p>';
 
