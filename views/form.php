@@ -15,6 +15,9 @@ use m00nk\feedbackForm\FeedbackForm;
 /**
  * @var $this  View
  * @var $model FeedbackModel
+ * @var string $secretIdFieldName имя поля, содержащего уникальный ID данной формы. Необходимо, чтобы несколько форм на одной странице не ловили чужие данные.
+ * @var string $showSentMessage нужно ли показать под формой сообщение об успешной отправке?
+ *
  * @var $form ActiveForm
  * @var $widget FeedbackForm
  */
@@ -24,8 +27,8 @@ $widget = $this->context;
 if($widget->jsCaptchaName !== false)
 	\yii\web\JqueryAsset::register($this);
 
-
 $form = ActiveForm::begin([
+	'id' => $widget->id,
 	'action' => false,
 	'enableClientValidation' => $widget->enableClientValidation,
 	'enableAjaxValidation' => $widget->enableAjaxValidation,
@@ -35,6 +38,8 @@ $form = ActiveForm::begin([
 
 	'options' => $widget->htmlOptions,
 ]);
+
+echo Html::hiddenInput($secretIdFieldName, $widget->id);
 
 if($widget->legend !== false) echo Html::tag('legend', array(), $widget->legend);
 
@@ -79,3 +84,6 @@ foreach($model->_inputs as $inp)
 <?php
 
 ActiveForm::end();
+
+if($showSentMessage)
+	echo Html::tag('div', $widget->okMessage, ['class' => 'form-group']);

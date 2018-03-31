@@ -10,8 +10,8 @@
 namespace m00nk\feedbackForm;
 
 use m00nk\feedbackForm\models\FeedbackModel;
-use yii\base\Widget;
 use Yii;
+use yii\base\Widget;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
@@ -75,7 +75,7 @@ class FeedbackForm extends Widget
 	 */
 	public $inputs = [];
 
-	/** @var bool|string имя поля для JS-капчи или FALSE если не нужно  */
+	/** @var bool|string имя поля для JS-капчи или FALSE если не нужно */
 	public $jsCaptchaName = false;
 
 	/** @var string надпись на кнопке отправки */
@@ -83,6 +83,9 @@ class FeedbackForm extends Widget
 
 	/** @var string HTML-сообщение, которое получает юзер вместо формы при успешной отправке сообщения */
 	public $okMessage = 'Ваше сообщение успешно отправлено.';
+
+	/** @var bool показать ли повторно форму после отправки. TRUE - будет показана форма и ниже текст $okMessage, FALSE - будет выведен только текст $okMessage */
+	public $showFormAfterSent = false;
 
 	/** @var string имя переменной в сессии, которая блокирует повторную отправку сообщений для данной формы */
 	public $sessionVarName = 'feedback_form_blocked';
@@ -119,6 +122,8 @@ class FeedbackForm extends Widget
 
 	public function run()
 	{
+		$secretIdFieldName = 'fm_'.md5($this->magicWord.'==='.$this->id);
+
 		if($this->messageTemplate === false)
 			$this->messageTemplate = '
 <h2>Здравствуйте.</h2>
@@ -136,7 +141,7 @@ class FeedbackForm extends Widget
 				'magicWord' => $this->magicWord,
 			]);
 
-			if($model->load(Yii::$app->request->post()))
+			if(Yii::$app->request->post($secretIdFieldName) == $this->id && $model->load(Yii::$app->request->post()))
 			{
 				if($model->validate())
 				{
@@ -147,15 +152,19 @@ class FeedbackForm extends Widget
 					foreach($this->toEmails as $email)
 						$model->send($this->subject, $email, $senderEmail, $this->messageTemplate);
 
-					echo $this->okMessage;
+					if($this->showFormAfterSent)
+						echo $this->render('form', ['model' => $model, 'secretIdFieldName' => $secretIdFieldName, 'showSentMessage' => true]);
+					else
+						echo $this->okMessage;
 
 					Yii::$app->session->set($this->sessionVarName, time() + $this->blockDelay);
+
 					return;
 				}
 			}
 
 			$model->resetCaptcha();
-			echo $this->render('form', ['model' => $model]);
+			echo $this->render('form', ['model' => $model, 'secretIdFieldName' => $secretIdFieldName, 'showSentMessage' => false]);
 		}
 		else
 		{
