@@ -114,10 +114,13 @@ class FeedbackForm extends Widget
 	/** @var bool|string текст заголовка формы или false если заголовок не нужен */
 	public $legend = false;
 
-	/** @var bool включить валидацию на стороне клиента */
+    /**
+     * @var bool включить валидацию на стороне клиента. ВНИМАНИЕ!!! Форма начинает глючить, если одновременно включена
+     *      проверка капчи и валидация на клиенте. Лучше отключить валидацию и обернуть форму внутрь Pjax.
+     */
 	public $enableClientValidation = false;
 
-	/** @var bool включить валидацию через AJAX */
+	/** @var bool включить валидацию через AJAX. Не рекомендуется к использованию. Лучше отключить валидацию и обернуть форму внутрь Pjax. */
 	public $enableAjaxValidation = false;
 
 	public function run()

@@ -53,7 +53,7 @@ foreach($model->_inputs as $inp)
 
 		case FeedbackModel::TYPE_CAPTCHA:
 			echo Html::activeHiddenInput($model, $inp['field']);
-			$this->registerJs('$("#'.Html::getInputId($model, $inp['field']).'").val('.$model->getExpression().');');
+			$this->registerJs('jQuery("#'.Html::getInputId($model, $inp['field']).'").val('.$model->getExpression().');');
 			break;
 
 		case FeedbackModel::TYPE_INPUT:
