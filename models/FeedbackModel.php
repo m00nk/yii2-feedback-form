@@ -14,17 +14,18 @@ use yii\helpers\Html;
 
 class FeedbackModel extends Model
 {
-	const TYPE_INPUT = 'input';
-	const TYPE_TEXT = 'text';
-	const TYPE_DROPDOWN = 'dropdown';
-	const TYPE_CAPTCHA = 'captcha';
-	const TYPE_CAPTCHA_CODE = 'captcha code';
+    const TYPE_INPUT = 'input';
+    const TYPE_TEXT = 'text';
+    const TYPE_DROPDOWN = 'dropdown';
+    const TYPE_CAPTCHA = 'captcha';
+    const TYPE_CAPTCHA_CODE = 'captcha code';
 
-	public $magicWord = '';
+    public $magicWord = '';
 
-	public $jsCaptchaName = false; // имя поля или FALSE если не нужно
+    public $jsCaptchaName = false; // имя поля или FALSE если не нужно
+    public $captchFailMessage;
 
-	public $_inputs = [];
+    public $_inputs = [];
 //-----------------------------------------
 // ПРИМЕР ИСПОЛЬЗОВАНИЯ (ФОРМАТ)
 //-----------------------------------------
@@ -65,153 +66,167 @@ class FeedbackModel extends Model
 //			'htmlOptions' => ['class' => 'span6', 'style' => 'height: 100px; resize: none;'],
 //		],
 
-	//-----------------------------------------
-	private $_attrs = [];
+    //-----------------------------------------
+    private $_attrs = [];
 
-	private $_captchaCode = 0;
-	private $_captchaExpression = '';
+    private $_captchaCode = 0;
+    private $_captchaExpression = '';
 
-	public function init()
-	{
-		parent::init();
+    public function init()
+    {
+        parent::init();
 
-		$this->_captchaCode = rand(100000, 999999);
+        $this->_captchaCode = rand(100000, 999999);
 
-		if($this->jsCaptchaName !== false)
-		{
-			$this->_inputs[] = [
-				'label' => '',
-				'field' => $this->jsCaptchaName,
-				'type' => self::TYPE_CAPTCHA,
-			];
+        if ($this->jsCaptchaName !== false) {
+            $this->_inputs[] = [
+                'label' => '',
+                'field' => $this->jsCaptchaName,
+                'type' => self::TYPE_CAPTCHA,
+            ];
 
-			$this->_inputs[] = [
-				'label' => '',
-				'field' => $this->jsCaptchaName.'1',
-				'type' => self::TYPE_CAPTCHA_CODE,
-			];
-		}
+            $this->_inputs[] = [
+                'label' => '',
+                'field' => $this->jsCaptchaName.'1',
+                'type' => self::TYPE_CAPTCHA_CODE,
+            ];
+        }
 
-		foreach($this->_inputs as $inp)
-		{
-			if($inp['type'] == self::TYPE_CAPTCHA_CODE)
-				$this->{$inp['field']} = $this->_getCodeByValue(eval('return '.$this->getExpression().';'));
-			else
-				$this->{$inp['field']} = '';
-		}
-	}
+        $this->reset();
+    }
 
-	public function rules()
-	{
-		$out = [];
-		foreach($this->_inputs as $inp)
-		{
-			for($j = 0, $_cc = count($inp['rules']); $j < $_cc; $j++)
-			{
-				$rule = $inp['rules'][$j];
-				$out[] = array_merge([$inp['field']], $rule);
-			}
+    public function rules()
+    {
+        $out = [];
+        foreach ($this->_inputs as $inp) {
+            for ($j = 0, $_cc = count($inp['rules']); $j < $_cc; $j++) {
+                $rule = $inp['rules'][$j];
+                $out[] = array_merge([$inp['field']], $rule);
+            }
 
-			if($inp['type'] == self::TYPE_DROPDOWN)
-				$out[] = array_merge([$inp['field']], ['in', 'range' => array_keys($inp['values'])]);
-		}
+            if ($inp['type'] == self::TYPE_DROPDOWN) {
+                $out[] = array_merge([$inp['field']], ['in', 'range' => array_keys($inp['values'])]);
+            }
+        }
 
-		if($this->jsCaptchaName !== false)
-		{
-			$out[] = [$this->jsCaptchaName.'1', 'safe'];
+        if ($this->jsCaptchaName !== false) {
+            $out[] = [$this->jsCaptchaName.'1', 'safe'];
 
-			$out[] = [
-				$this->jsCaptchaName,
-				function (){
-					$oldVal = $this->{$this->jsCaptchaName.'1'};
-					$newVal = $this->{$this->jsCaptchaName};
-					$code = $this->_getCodeByValue($newVal);
+            $out[] = [
+                $this->jsCaptchaName,
+                function (){
+                    $oldVal = $this->{$this->jsCaptchaName.'1'};
+                    $newVal = $this->{$this->jsCaptchaName};
+                    $code = $this->_getCodeByValue($newVal);
 
-					if($oldVal != $code)
-						$this->addError($this->_inputs[0]['field'], 'You can not use this form because we are not sure you are human.');
-				},
-			];
-		}
+                    if ($oldVal != $code) {
+                        $this->addError($this->_inputs[0]['field'], $this->captchFailMessage);
+                    }
+                },
+            ];
+        }
 
-		return $out;
-	}
+        return $out;
+    }
 
-	public function attributeLabels()
-	{
-		$out = [];
-		foreach($this->_inputs as $inp)
-			$out[$inp['field']] = $inp['label'];
+    public function attributeLabels()
+    {
+        $out = [];
+        foreach ($this->_inputs as $inp) {
+            $out[$inp['field']] = $inp['label'];
+        }
 
-		return $out;
-	}
+        return $out;
+    }
 
-	public function __set($var, $value)
-	{
-		$this->_attrs[$var] = $value;
-	}
+    public function __set($var, $value)
+    {
+        $this->_attrs[$var] = $value;
+    }
 
-	public function __get($var)
-	{
-		if(array_key_exists($var, $this->_attrs)) return $this->_attrs[$var];
-		throw new \Exception("Variable '$var' is absent");
-	}
+    public function __get($var)
+    {
+        if (array_key_exists($var, $this->_attrs)) {
+            return $this->_attrs[$var];
+        }
+        throw new \Exception("Variable '$var' is absent");
+    }
 
-	public function send($subject, $to, $from, $template)
-	{
-		$msg = '';
-		for($i = 0, $_c = count($this->_inputs); $i < $_c; $i++)
-		{
-			$inp = $this->_inputs[$i];
+    public function send($subject, $to, $from, $template)
+    {
+        $msg = '';
+        for ($i = 0, $_c = count($this->_inputs); $i < $_c; $i++) {
+            $inp = $this->_inputs[$i];
 
-			if($inp['type'] == self::TYPE_CAPTCHA || $inp['type'] == self::TYPE_CAPTCHA_CODE)
-				continue;
+            if ($inp['type'] == self::TYPE_CAPTCHA || $inp['type'] == self::TYPE_CAPTCHA_CODE) {
+                continue;
+            }
 
-			$value = $this->{$inp['field']};
+            $value = $this->{$inp['field']};
 
-			if($inp['type'] == self::TYPE_DROPDOWN)
-				$value = $inp['values'][$value];
+            if ($inp['type'] == self::TYPE_DROPDOWN) {
+                $value = $inp['values'][$value];
+            }
 
-			$msg[] = Html::tag('dl',
-				Html::tag('dt', Html::encode($inp['label'])).
-				Html::tag('dd', Html::encode($value))
-			);
-		}
-		$msg = implode('', $msg);
+            $msg[] = Html::tag('dl',
+                Html::tag('dt', Html::encode($inp['label'])).
+                Html::tag('dd', Html::encode($value))
+            );
+        }
+        $msg = implode('', $msg);
 
-		$msg = str_replace('{text}', $msg, $template);
+        $msg = str_replace('{text}', $msg, $template);
 
-		return \Yii::$app->mailer->compose()
-			->setFrom($from)
-			->setTo($to)
-			->setSubject($subject)
-			->setHtmlBody($msg)
-			->send();
-	}
+        return \Yii::$app->mailer->compose()
+            ->setFrom($from)
+            ->setTo($to)
+            ->setSubject($subject)
+            ->setHtmlBody($msg)
+            ->send();
+    }
 
-	private function _getCodeByValue($val)
-	{
-		$_ = substr(md5($this->magicWord.'-=-=-=-'.$val), 10, 18);
+    private function _getCodeByValue($val)
+    {
+        $_ = substr(md5($this->magicWord.'-=-=-=-'.$val), 10, 18);
 
-		return $_;
-	}
+        return $_;
+    }
 
-	public function getExpression()
-	{
-		if(empty($this->_captchaExpression))
-		{
-			$a = rand(10000, 99999);
-			$b = rand(10000, 99999);
-			$this->_captchaExpression = $this->_captchaCode.' + '.$a.' - '.$b;
-		}
+    public function getExpression()
+    {
+        if (empty($this->_captchaExpression)) {
+            $a = rand(10000, 99999);
+            $b = rand(10000, 99999);
+            $this->_captchaExpression = $this->_captchaCode.' + '.$a.' - '.$b;
+        }
 
-		return $this->_captchaExpression;
-	}
+        return $this->_captchaExpression;
+    }
 
-	public function resetCaptcha()
-	{
-		$this->_captchaExpression = '';
+    public function resetCaptcha()
+    {
+        $this->_captchaExpression = '';
 
-		$this->{$this->jsCaptchaName} = '';
-		$this->{$this->jsCaptchaName.'1'} = $this->_getCodeByValue(eval('return '.$this->getExpression().';'));
-	}
+        $this->{$this->jsCaptchaName} = '';
+        $this->{$this->jsCaptchaName.'1'} = $this->_getCodeByValue(eval('return '.$this->getExpression().';'));
+    }
+
+    public function getFullFieldName($fldName, $widget)
+    {
+        return 'ff-'.$fldName.'-'.$widget->id;
+    }
+
+    /**
+     * Очищаем все поля
+     */
+    public function reset()
+    {
+        foreach ($this->_inputs as $inp) {
+            if ($inp['type'] == self::TYPE_CAPTCHA_CODE) {
+                $this->{$inp['field']} = $this->_getCodeByValue(eval('return '.$this->getExpression().';'));
+            } else {
+                $this->{$inp['field']} = '';
+            }
+        }
+    }
 }

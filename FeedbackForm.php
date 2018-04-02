@@ -78,6 +78,9 @@ class FeedbackForm extends Widget
 	/** @var bool|string имя поля для JS-капчи или FALSE если не нужно */
 	public $jsCaptchaName = false;
 
+	/** @var string сообщение, которое отобразится в качестве ошибки первого поля если проверка капчи провалится. Используется только если $jsCaptchaName != false */
+	public $captchFailMessage = 'Мы не можем отправить эту форму, т.к. есть подозрение, что Вы не являетесь человеком.';
+
 	/** @var string надпись на кнопке отправки */
 	public $sendButtonLabel = 'Отправить';
 
@@ -141,11 +144,18 @@ class FeedbackForm extends Widget
 			$model = new FeedbackModel([
 				'_inputs' => $this->inputs,
 				'jsCaptchaName' => $this->jsCaptchaName,
+				'captchFailMessage' => $this->captchFailMessage,
 				'magicWord' => $this->magicWord,
 			]);
 
 			if(Yii::$app->request->post($secretIdFieldName) == $this->id && $model->load(Yii::$app->request->post()))
 			{
+			    if(!empty($this->jsCaptchaName))
+                {
+                    $model->{$this->jsCaptchaName} = Yii::$app->request->post($model->getFullFieldName($this->jsCaptchaName, $this));
+                    $model->{$this->jsCaptchaName.'1'} = Yii::$app->request->post($model->getFullFieldName($this->jsCaptchaName.'1', $this));
+                }
+
 				if($model->validate())
 				{
 					$senderEmail = $this->senderEmail;
@@ -154,6 +164,8 @@ class FeedbackForm extends Widget
 
 					foreach($this->toEmails as $email)
 						$model->send($this->subject, $email, $senderEmail, $this->messageTemplate);
+
+					$model->reset();
 
 					if($this->showFormAfterSent)
 						echo $this->render('form', ['model' => $model, 'secretIdFieldName' => $secretIdFieldName, 'showSentMessage' => true]);
@@ -166,7 +178,6 @@ class FeedbackForm extends Widget
 				}
 			}
 
-			$model->resetCaptcha();
 			echo $this->render('form', ['model' => $model, 'secretIdFieldName' => $secretIdFieldName, 'showSentMessage' => false]);
 		}
 		else

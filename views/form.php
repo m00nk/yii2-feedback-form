@@ -25,7 +25,10 @@ use m00nk\feedbackForm\FeedbackForm;
 $widget = $this->context;
 
 if($widget->jsCaptchaName !== false)
-	\yii\web\JqueryAsset::register($this);
+{
+    \yii\web\JqueryAsset::register($this);
+    $model->resetCaptcha();
+}
 
 $form = ActiveForm::begin([
 	'id' => $widget->id,
@@ -43,17 +46,20 @@ echo Html::hiddenInput($secretIdFieldName, $widget->id);
 
 if($widget->legend !== false) echo Html::tag('legend', array(), $widget->legend);
 
+
 foreach($model->_inputs as $inp)
 {
 	switch ($inp['type'])
 	{
 		case FeedbackModel::TYPE_CAPTCHA_CODE:
-			echo Html::activeHiddenInput($model, $inp['field']);
+            $captchaFieldNameAndId = $model->getFullFieldName($inp['field'], $widget);
+            echo Html::hiddenInput($captchaFieldNameAndId, $model->{$inp['field']});
 			break;
 
 		case FeedbackModel::TYPE_CAPTCHA:
-			echo Html::activeHiddenInput($model, $inp['field']);
-			$this->registerJs('jQuery("#'.Html::getInputId($model, $inp['field']).'").val('.$model->getExpression().');');
+            $captchaFieldNameAndId = $model->getFullFieldName($inp['field'], $widget);
+			echo Html::hiddenInput($captchaFieldNameAndId, '', ['id' => $captchaFieldNameAndId]);
+			$this->registerJs('jQuery("#'.$captchaFieldNameAndId.'").val('.$model->getExpression().');');
 			break;
 
 		case FeedbackModel::TYPE_INPUT:
