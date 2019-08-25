@@ -31,9 +31,11 @@ if($widget->jsCaptchaName !== false) {
 
 $btnSendId = 'feedback-btn-send-'.$widget->id;
 
-\yii\widgets\Pjax::begin([
-	'enablePushState' => false // чтобы после отправки не ломало URL страницы
-]);
+if($widget->enablePjax){
+	\yii\widgets\Pjax::begin([
+		'enablePushState' => false // чтобы после отправки не ломало URL страницы
+	]);
+}
 
 $form = ActiveForm::begin([
 	'id' => $widget->id,
@@ -108,4 +110,6 @@ if($showSentMessage) {
 	echo Html::tag('div', $widget->okMessage, ['class' => 'form-group']);
 }
 
-\yii\widgets\Pjax::end();
+if($widget->enablePjax) {
+	\yii\widgets\Pjax::end();
+}

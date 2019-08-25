@@ -126,6 +126,9 @@ class FeedbackForm extends Widget
 	/** @var bool включить валидацию через AJAX. Не рекомендуется к использованию. Лучше отключить валидацию и обернуть форму внутрь Pjax. */
 	public $enableAjaxValidation = false;
 
+	/** @var bool Обернуть ли форму в Pjax (для обновления без перезагрузки) */
+	public $enablePjax = false;
+
 	public function run()
 	{
 		$secretIdFieldName = 'fm_'.md5($this->magicWord.'==='.$this->id);
@@ -141,7 +144,7 @@ class FeedbackForm extends Widget
 
 		$oldTime = Yii::$app->session->get($this->sessionVarName, 0);
 
-		if(time() - $this->blockDelay > $oldTime)
+		if(time() - $this->blockDelay >= $oldTime)
 		{
 			$model = new FeedbackModel([
 				'_inputs' => $this->inputs,
@@ -149,6 +152,10 @@ class FeedbackForm extends Widget
 				'captchFailMessage' => $this->captchFailMessage,
 				'magicWord' => $this->magicWord,
 			]);
+
+			if($this->enablePjax){
+				$this->htmlOptions['data-pjax'] = 1; // чтобы форма корректно работала с Pjax
+			}
 
 			if(Yii::$app->request->post($secretIdFieldName) == $this->id && $model->load(Yii::$app->request->post()))
 			{
@@ -169,18 +176,14 @@ class FeedbackForm extends Widget
 
 					$model->reset();
 
-					if($this->showFormAfterSent)
-						echo $this->render('form', ['model' => $model, 'secretIdFieldName' => $secretIdFieldName, 'showSentMessage' => true]);
-					else
-						echo $this->okMessage;
-
 					Yii::$app->session->set($this->sessionVarName, time());
 
-					return;
+					if($this->showFormAfterSent)
+						return $this->render('form', ['model' => $model, 'secretIdFieldName' => $secretIdFieldName, 'showSentMessage' => true]);
+					else
+						return $this->okMessage;
 				}
 			}
-
-			$this->htmlOptions['data-pjax'] = 1; // чтобы форма корректно работала с Pjax
 
 			echo $this->render('form', ['model' => $model, 'secretIdFieldName' => $secretIdFieldName, 'showSentMessage' => false]);
 		}
