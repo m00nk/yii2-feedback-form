@@ -3,7 +3,7 @@
  * @copyright (C) FIT-Media.com {@link http://fit-media.com}
  * Date: 07.10.15, Time: 1:04
  *
- * @author Dmitrij "m00nk" Sheremetjev <m00nk1975@gmail.com>
+ * @author        Dmitrij "m00nk" Sheremetjev <m00nk1975@gmail.com>
  */
 
 use \yii\web\View;
@@ -13,22 +13,27 @@ use m00nk\feedbackForm\models\FeedbackModel;
 use m00nk\feedbackForm\FeedbackForm;
 
 /**
- * @var $this  View
- * @var $model FeedbackModel
+ * @var        $this              View
+ * @var        $model             FeedbackModel
  * @var string $secretIdFieldName имя поля, содержащего уникальный ID данной формы. Необходимо, чтобы несколько форм на одной странице не ловили чужие данные.
- * @var string $showSentMessage нужно ли показать под формой сообщение об успешной отправке?
+ * @var string $showSentMessage   нужно ли показать под формой сообщение об успешной отправке?
  *
- * @var $form ActiveForm
- * @var $widget FeedbackForm
+ * @var        $form              ActiveForm
+ * @var        $widget            FeedbackForm
  */
 
 $widget = $this->context;
 
-if($widget->jsCaptchaName !== false)
-{
-    \yii\web\JqueryAsset::register($this);
-    $model->resetCaptcha();
+if($widget->jsCaptchaName !== false) {
+	\yii\web\JqueryAsset::register($this);
+	$model->resetCaptcha();
 }
+
+$btnSendId = 'feedback-btn-send-'.$widget->id;
+
+\yii\widgets\Pjax::begin([
+	'enablePushState' => false // чтобы после отправки не ломало URL страницы
+]);
 
 $form = ActiveForm::begin([
 	'id' => $widget->id,
@@ -44,27 +49,26 @@ $form = ActiveForm::begin([
 
 echo Html::hiddenInput($secretIdFieldName, $widget->id);
 
-if($widget->legend !== false) echo Html::tag('legend', array(), $widget->legend);
+if($widget->legend !== false) {
+	echo Html::tag('legend', [], $widget->legend);
+}
 
-
-foreach($model->_inputs as $inp)
-{
-	switch ($inp['type'])
-	{
+foreach($model->_inputs as $inp) {
+	switch($inp['type']) {
 		case FeedbackModel::TYPE_CAPTCHA_CODE:
-            $captchaFieldNameAndId = $model->getFullFieldName($inp['field'], $widget);
-            echo Html::hiddenInput($captchaFieldNameAndId, $model->{$inp['field']});
+			$captchaFieldNameAndId = $model->getFullFieldName($inp['field'], $widget);
+			echo Html::hiddenInput($captchaFieldNameAndId, $model->{$inp['field']});
 			break;
 
 		case FeedbackModel::TYPE_CAPTCHA:
-            $captchaFieldNameAndId = $model->getFullFieldName($inp['field'], $widget);
+			$captchaFieldNameAndId = $model->getFullFieldName($inp['field'], $widget);
 			echo Html::hiddenInput($captchaFieldNameAndId, '', ['id' => $captchaFieldNameAndId]);
 			$this->registerJs('jQuery("#'.$captchaFieldNameAndId.'").val('.$model->getExpression().');');
 			break;
 
 		case FeedbackModel::TYPE_INPUT:
 			echo $form->field($model, $inp['field'], ['inputOptions' => isset($inp['htmlOptions']) ? $inp['htmlOptions'] : []])
-			->hint(!empty($inp['hint']) ? $inp['hint'] : '');
+				->hint(!empty($inp['hint']) ? $inp['hint'] : '');
 			break;
 
 		case FeedbackModel::TYPE_TEXT:
@@ -82,14 +86,26 @@ foreach($model->_inputs as $inp)
 ?>
 	<div class="form-group">
 		<div class="<?= $widget->submitDivClasses; ?>">
-			<?= Html::submitButton($widget->sendButtonLabel, ['class' => 'btn btn-primary']); ?>
+			<?= Html::submitButton($widget->sendButtonLabel, ['class' => 'btn btn-primary', 'id' => $btnSendId]); ?>
 		</div>
 		<div class="clearfix"></div>
 	</div>
-
 <?php
 
 ActiveForm::end();
 
-if($showSentMessage)
+// Скрипт блокирует повторную отправку формы заменяя надпись на кнопке и делая ее неактивной.
+
+$this->registerJs("
+	$(function(){
+		$('#".$widget->id."').submit(function(e){
+			$('#".$btnSendId."').text('Обработка....').attr('disabled', 'disabled');
+		});
+	});
+");
+
+if($showSentMessage) {
 	echo Html::tag('div', $widget->okMessage, ['class' => 'form-group']);
+}
+
+\yii\widgets\Pjax::end();

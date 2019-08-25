@@ -130,16 +130,18 @@ class FeedbackForm extends Widget
 	{
 		$secretIdFieldName = 'fm_'.md5($this->magicWord.'==='.$this->id);
 
-		if($this->messageTemplate === false)
+		if($this->messageTemplate === false){
 			$this->messageTemplate = '
 <h2>Здравствуйте.</h2>
 <p>Новое сообщение было отправлено со страницы <a href="'.Url::to(array_merge([''], $_GET), true).'">'.Url::to(array_merge([''], $_GET), true).'</a>.</p>
 <p>Тема: <b>'.Html::encode($this->subject).'</b></p>
 {text}
 <p><br/>---<br/>Sent by Feedback robot at '.date('d.m.Y H:i:s').'</p>';
+		}
 
 		$oldTime = Yii::$app->session->get($this->sessionVarName, 0);
-		if(time() - $oldTime > $this->blockDelay)
+
+		if(time() - $this->blockDelay > $oldTime)
 		{
 			$model = new FeedbackModel([
 				'_inputs' => $this->inputs,
@@ -172,11 +174,13 @@ class FeedbackForm extends Widget
 					else
 						echo $this->okMessage;
 
-					Yii::$app->session->set($this->sessionVarName, time() + $this->blockDelay);
+					Yii::$app->session->set($this->sessionVarName, time());
 
 					return;
 				}
 			}
+
+			$this->htmlOptions['data-pjax'] = 1; // чтобы форма корректно работала с Pjax
 
 			echo $this->render('form', ['model' => $model, 'secretIdFieldName' => $secretIdFieldName, 'showSentMessage' => false]);
 		}
